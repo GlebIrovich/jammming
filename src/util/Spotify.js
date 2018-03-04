@@ -1,7 +1,10 @@
 require('dotenv').config();
 const clientId = process.env.REACT_APP_CLIENT_ID;
+
 //const redirectURI = 'http://localhost:3000/';
+
 const redirectURI = 'https://codeacademy-jammming.herokuapp.com/';
+
 let Spotify = {
   accessToken: '',
   getAccessToken(){
