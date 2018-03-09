@@ -1,9 +1,7 @@
 require('dotenv').config();
 const clientId = process.env.REACT_APP_CLIENT_ID;
 
-//const redirectURI = 'http://localhost:3000/';
-
-const redirectURI = 'https://codeacademy-jammming.herokuapp.com/';
+const redirectURI = process.env.REACT_APP_REDIRECT_URI;
 
 let Spotify = {
   accessToken: '',
@@ -46,10 +44,7 @@ let Spotify = {
         return [];
       });
   },
-  getUserId(){
-    const accessToken = this.getAccessToken();
-    const headers = {'Authorization': 'Bearer ' + accessToken};
-    const url = 'https://api.spotify.com/v1/me';
+  getUserId(url, headers){
     return fetch(url, {
       headers: headers
     }).then(response => {
@@ -60,37 +55,61 @@ let Spotify = {
       };
     })
   },
-  async savePlaylist(playlistName, trackURIs){
-    if(trackURIs){
-      const accessToken = this.getAccessToken();
-      const headers = {'Authorization': 'Bearer ' + accessToken};
-      let userId = await this.getUserId();
-      const url = `https://api.spotify.com/v1/users/${userId}/playlists`;
-
-      // create a playlist
-      const playlistID = await fetch(url, {
+  // Get playlist id
+  async getPlaylistID(url, headers, playlistName){
+    try{
+      let response = await fetch(url, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({name: playlistName})
-      }).then(response => {
-        if(response.ok){
-          return response.json();
-        }
-      }).then(jsonResponse => jsonResponse.id)
-
-      // move tracks to a created Playlist
-      const addTracksUrl = `https://api.spotify.com/v1/users/${userId}/playlists/${playlistID}/tracks`
-      fetch(addTracksUrl, {
+      })
+      if(response.ok){
+        let jsonResponse = await response.json();
+        return jsonResponse.id;
+      }
+      throw new Error('Request failed!')
+    } catch(error) {
+      return false;
+    }
+  },
+  // add tracks
+  async addTracks(url, headers, trackURIs){
+    try{
+      let response = await fetch(url ,{
         method: 'POST',
         headers: headers,
         body: JSON.stringify({uris: trackURIs})
-      }).then(response => {
-        if(response.ok){
-          return response.json();
-        }
-      }).then(jsonResponse => jsonResponse)
+      })
+      if(response.ok){
+        let jsonResponse = await response.json();
+        return jsonResponse;
+      }
+      throw new Error('Request failed!')
+    } catch(error) {
+      return false;
     }
-    return ;
+  },
+  async savePlaylist(playlistName, trackURIs){
+    let isCompleted = false;
+    if(trackURIs.length){
+      const accessToken = this.getAccessToken();
+      const headers = {'Authorization': 'Bearer ' + accessToken};
+      const urlUserId = 'https://api.spotify.com/v1/me';
+
+      const userId = await this.getUserId(urlUserId, headers);
+
+      const url = `https://api.spotify.com/v1/users/${userId}/playlists`;
+
+      // create a playlist
+      const playlistID = await this.getPlaylistID(url, headers, playlistName);
+
+      // move tracks to a created Playlist
+      const addTracksUrl = `https://api.spotify.com/v1/users/${userId}/playlists/${playlistID}/tracks`;
+      const tracksResponse = await this.addTracks(addTracksUrl, headers, trackURIs);
+
+      isCompleted = tracksResponse ? true : false;
+    }
+    return isCompleted;
   }
 }
 

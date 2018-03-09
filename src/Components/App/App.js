@@ -3,6 +3,7 @@ import './App.css';
 import SearchBar from '../SearchBar/SearchBar';
 import SearchResults from '../SearchResults/SearchResults';
 import Playlist from '../Playlist/Playlist';
+import LoadingScreen from '../LoadingScreen/LoadingScreen';
 import Spotify from '../../util/Spotify';
 
 class App extends Component {
@@ -10,14 +11,17 @@ class App extends Component {
     super(props);
     this.state = {
       searchResults: [],
-      playlistName: 'Any String',
-      playlistTracks: []
+      playlistName: 'New playlist',
+      playlistTracks: [],
+      isCompleted: false,
+      isLoading: false
     };
     this.addTrack = this.addTrack.bind(this);
     this.removeTrack = this.removeTrack.bind(this);
     this.updatePlaylistName = this.updatePlaylistName.bind(this);
     this.savePlaylist = this.savePlaylist.bind(this);
     this.search = this.search.bind(this);
+    this.loading = this.loading.bind(this);
   }
   addTrack(track){
     let idExists = this.state.playlistTracks.some(trackIn => trackIn.id === track.id);
@@ -34,14 +38,31 @@ class App extends Component {
   updatePlaylistName(name) {
     this.setState({playlistName: name});
   }
-  savePlaylist(){
-    let trackURIs = this.state.playlistTracks.map(track => track.uri);
-    Spotify.savePlaylist(this.state.playlistName, trackURIs).then(
+  loading(loadingStatus, delay){
+    setTimeout(function(){
       this.setState({
-        playlistName: '',
-        playlistTracks: []
+        isLoading: !loadingStatus
       })
-    )
+    }.bind(this), delay)
+  }
+  savePlaylist(){
+    // start loading screen
+    this.loading(this.state.isLoading, 0);
+    let trackURIs = this.state.playlistTracks.map(track => track.uri);
+
+    Spotify.savePlaylist(this.state.playlistName, trackURIs).then( isCompleted => {
+      this.setState({
+        isCompleted: isCompleted
+      });
+      if (isCompleted){
+        this.setState({
+          playlistName: 'New playlist',
+          playlistTracks: []
+        })
+      }
+      this.loading(this.state.isLoading, 4000);
+    }
+  )
   }
   search(term) {
     Spotify.search(term).then(
@@ -57,6 +78,9 @@ class App extends Component {
       <div>
         <h1>Ja<span className="highlight">mmm</span>ing</h1>
         <div className="App">
+          <LoadingScreen
+            isLoading={this.state.isLoading}
+            isCompleted={this.state.isCompleted}/>
           <SearchBar onSearch = {this.search}/>
           <div className="App-playlist">
             <SearchResults
