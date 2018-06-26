@@ -1,1 +1,1 @@
-For demo, please check [here](https://cookiehunter22.github.io/jammming/).
+For demo, please check [here](https://jammming-project.herokuapp.com/).

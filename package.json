@@ -1,10 +1,8 @@
 {
   "name": "jammming",
   "version": "0.1.0",
-  "homepage": "https://cookiehunter22.github.io/the-void/",
   "private": true,
   "dependencies": {
-    "gh-pages": "^1.2.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.1.1"
